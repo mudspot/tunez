@@ -3,6 +3,8 @@ defmodule TunezWeb.Artists.IndexLive do
 
   require Logger
 
+  alias Tunez.Domains.Music
+
   def mount(_params, _session, socket) do
     socket =
       socket
@@ -12,41 +14,13 @@ defmodule TunezWeb.Artists.IndexLive do
   end
 
   def handle_params(_params, _url, socket) do
-    artists = [
-      %{id: "test-artist-1", name: "Test Artist 1"},
-      %{id: "test-artist-2", name: "Test Artist 2"},
-      %{id: "test-artist-3", name: "Test Artist 3"}
-    ]
+    {:ok, artists} = Music.list_artists()
 
     socket =
       socket
       |> assign(:artists, artists)
 
     {:noreply, socket}
-  end
-
-  def render(assigns) do
-    ~H"""
-    <.header responsive={false}>
-      <.h1>Artists</.h1>
-      <:action>
-        <.button_link navigate={~p"/artists/new"} kind="primary">
-          New Artist
-        </.button_link>
-      </:action>
-    </.header>
-
-    <div :if={@artists == []} class="p-8 text-center">
-      <.icon name="hero-face-frown" class="w-32 h-32 bg-base-300" />
-      <br /> No artist data to display!
-    </div>
-
-    <ul class="gap-6 lg:gap-12 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-      <li :for={artist <- @artists}>
-        <.artist_card artist={artist} />
-      </li>
-    </ul>
-    """
   end
 
   def artist_card(assigns) do

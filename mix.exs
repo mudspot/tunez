@@ -33,6 +33,7 @@ defmodule Tunez.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:ash_phoenix, "~> 2.0"},
       {:ash_postgres, "~> 2.0"},
       {:error_tracker, "~> 0.5"},
       {:ash, "~> 3.0"},

@@ -490,26 +490,58 @@ defmodule TunezWeb.CoreComponents do
   end
 
   @doc """
-  Renders a header with title.
+  Renders a header with title and optionally some actions.
+
+  At small screen sizes, any actions provided will collapse into a dropdown list.
+  This can be disabled with `responsive={false}`.
   """
   attr :class, :string, default: nil
+  attr :responsive, :boolean, default: true
 
   slot :inner_block, required: true
   slot :subtitle
-  slot :actions
+  slot :action
 
   def header(assigns) do
     ~H"""
-    <header class={[@actions != [] && "flex items-center justify-between gap-6", @class]}>
+    <header class={[
+      @action != [] && "flex items-center justify-between sm:gap-3 md:gap-6",
+      @class,
+      "my-6"
+    ]}>
       <div>
-        <h1 class="text-lg font-semibold leading-8 text-zinc-800">
-          {render_slot(@inner_block)}
-        </h1>
+        {render_slot(@inner_block)}
         <p :if={@subtitle != []} class="mt-2 text-sm leading-6 text-zinc-600">
           {render_slot(@subtitle)}
         </p>
       </div>
-      <div class="flex-none">{render_slot(@actions)}</div>
+      <div
+        :if={@action != []}
+        class={[
+          !@responsive && "flex-none space-x-4",
+          @responsive && "max-sm:dropdown max-sm:dropdown-end sm:flex-none sm:space-x-4"
+        ]}
+      >
+        <div
+          :if={@responsive}
+          tabindex="0"
+          role="button"
+          class="btn btn-sm btn-primary btn-outline sm:hidden"
+        >
+          <.icon name="hero-chevron-double-down w-4 h-4" />
+        </div>
+        <div
+          tabindex="0"
+          class={[
+            !@responsive && "space-x-4",
+            @responsive &&
+              "dropdown-content max-sm:flex max-sm:flex-col-reverse max-sm:z-[1] max-sm:menu
+               max-sm:p-2 max-sm:shadow max-sm:bg-base-100 max-sm:rounded-box max-sm:w-52 sm:space-x-4"
+          ]}
+        >
+          {render_slot(@action)}
+        </div>
+      </div>
     </header>
     """
   end

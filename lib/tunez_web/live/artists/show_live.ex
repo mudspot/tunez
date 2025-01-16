@@ -3,16 +3,14 @@ defmodule TunezWeb.Artists.ShowLive do
 
   require Logger
 
+  alias Tunez.Domains.Music, as: MusicDomain
+
   def mount(_params, _session, socket) do
     {:ok, socket}
   end
 
-  def handle_params(_params, _url, socket) do
-    artist = %{
-      id: "test-artist-1",
-      name: "Artist Name",
-      biography: "Sample biography content here"
-    }
+  def handle_params(%{"id" => id} = _params, _url, socket) do
+    {:ok, artist} = MusicDomain.get_artist(id)
 
     albums = [
       %{
@@ -171,8 +169,26 @@ defmodule TunezWeb.Artists.ShowLive do
     """
   end
 
-  def handle_event("destroy_artist", _params, socket) do
-    {:noreply, socket}
+  def handle_event("destroy_artist", _params, %{assigns: %{artist: artist}} = socket) do
+    case MusicDomain.destroy_artist(artist) do
+      :ok ->
+        socket =
+          socket
+          |> put_flash(:info, "Artist deleted successfully")
+          |> push_navigate(to: ~p"/")
+
+        {:noreply, socket}
+
+      {:error, error} ->
+        Logger.info("Could not delete artist '#{artist.id}':
+      #{inspect(error)}")
+
+        socket =
+          socket
+          |> put_flash(:error, "Could not delete artist")
+
+        {:noreply, socket}
+    end
   end
 
   def handle_event("destroy_album", _params, socket) do
