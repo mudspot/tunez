@@ -16,13 +16,10 @@ prod:
 	MIX_ENV=prod iex -S mix phx.server
 
 migrate:
-	mix ecto.migrate -r Tunez.Repo
+	mix ash.migrate
 
 rollback:
-	mix ecto.rollback -n 1 -r Tunez.Repo
-
-rollback-all:
-	mix ecto.rollback --all -r Tunez.Repo
+	mix ash.rollback
 
 migration-reset: snapshot-reset
 	git ls-files --others priv/repo/migrations | xargs rm
