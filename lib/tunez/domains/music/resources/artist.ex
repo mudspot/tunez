@@ -39,4 +39,8 @@ defmodule Tunez.Domains.Music.Resources.Artist do
       default nil
     end
   end
+
+  relationships do
+    has_many :albums, Tunez.Domains.Music.Resources.Album
+  end
 end

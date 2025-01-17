@@ -11,5 +11,12 @@ defmodule Tunez.Domains.Music do
       define :update_artist, action: :update
       define :destroy_artist, action: :destroy
     end
+
+    resource Tunez.Domains.Music.Resources.Album do
+      define :create_album, action: :create
+      define :get_album, get_by: :id, action: :read
+      define :update_album, action: :update
+      define :destroy_album, action: :destroy
+    end
   end
 end
