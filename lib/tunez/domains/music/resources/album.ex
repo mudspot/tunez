@@ -7,7 +7,7 @@ defmodule Tunez.Domains.Music.Resources.Album do
   postgres do
     table "albums"
     repo Tunez.Repo
-    
+
     references do
       reference :artist, on_delete: :delete
     end
@@ -41,6 +41,7 @@ defmodule Tunez.Domains.Music.Resources.Album do
                :cover_image_url,
                ~r/(^https:\/\/|\/images\/).+(\.png|\.jpg)$/
              ),
+             where: [changing(:cover_image_url)],
              message: "must start with https:// or /images/"
   end
 

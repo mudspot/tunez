@@ -20,42 +20,6 @@ defmodule TunezWeb.Artists.ShowLive do
     {:noreply, socket}
   end
 
-  def render(assigns) do
-    ~H"""
-    <.header>
-      <.h1>
-        {@artist.name}
-      </.h1>
-      <:action>
-        <.button_link
-          kind="error"
-          text
-          data-confirm={"Are you sure you want to delete #{@artist.name}?"}
-          phx-click="destroy_artist"
-        >
-          Delete Artist
-        </.button_link>
-      </:action>
-      <:action>
-        <.button_link navigate={~p"/artists/#{@artist.id}/edit"} kind="primary" outline>
-          Edit Artist
-        </.button_link>
-      </:action>
-    </.header>
-    <div class="mb-6">{formatted(@artist.biography)}</div>
-
-    <.button_link navigate={~p"/artists/#{@artist.id}/albums/new"} kind="primary">
-      New Album
-    </.button_link>
-
-    <ul class="mt-10 space-y-6 md:space-y-10">
-      <li :for={album <- @artist.albums}>
-        <.album_details album={album} />
-      </li>
-    </ul>
-    """
-  end
-
   def album_details(assigns) do
     ~H"""
     <div id={"album-#{@album.id}"} class="md:flex gap-8 group">

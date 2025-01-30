@@ -1,6 +1,9 @@
 <.header responsive={false}>
   <.h1>Artists</.h1>
   <:action>
+    <.search_box query={@query_text} method="get" data-role="artist-search" phx-submit="search" />
+  </:action>
+  <:action>
     <.button_link navigate={~p"/artists/new"} kind="primary">
       New Artist
     </.button_link>

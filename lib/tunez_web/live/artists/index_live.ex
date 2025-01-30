@@ -13,11 +13,13 @@ defmodule TunezWeb.Artists.IndexLive do
     {:ok, socket}
   end
 
-  def handle_params(_params, _url, socket) do
-    {:ok, artists} = Music.list_artists()
+  def handle_params(params, _url, socket) do
+    query_text = Map.get(params, "q", "")
+    {:ok, artists} = query_text |> Music.search_artists()
 
     socket =
       socket
+      |> assign(:query_text, query_text)
       |> assign(:artists, artists)
 
     {:noreply, socket}

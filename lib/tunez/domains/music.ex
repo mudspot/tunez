@@ -10,6 +10,7 @@ defmodule Tunez.Domains.Music do
       define :get_artist, get_by: :id, action: :read
       define :update_artist, action: :update
       define :destroy_artist, action: :destroy
+      define :search_artists, action: :search, args: [:query]
     end
 
     resource Tunez.Domains.Music.Resources.Album do
