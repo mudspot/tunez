@@ -11,6 +11,8 @@ defmodule Tunez.Domains.Music do
       define :update_artist, action: :update
       define :destroy_artist, action: :destroy
       define :search_artists, action: :search, args: [:query]
+
+      define :atomic_test, action: :atomic_test
     end
 
     resource Tunez.Domains.Music.Resources.Album do
