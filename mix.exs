@@ -37,6 +37,7 @@ defmodule Tunez.MixProject do
       {:picosat_elixir, "~> 0.2"},
       {:ash_phoenix, "~> 2.0"},
       {:ash_postgres, "~> 2.0"},
+      # {:ash_sql, "0.2.56"}, # TODO: Remove this line to update to latest version "0.2.57". Code will fail
       {:error_tracker, "~> 0.5"},
       {:ash, "~> 3.0"},
       {:igniter, "~> 0.5", only: [:dev, :test]},
