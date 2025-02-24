@@ -12,6 +12,10 @@ defmodule Tunez.Domains.Music do
       define :destroy_artist, action: :destroy
       define :search_artists, action: :search, args: [:query]
 
+      define :list_artists_with_special_albums,
+        action: :with_special_albums,
+        args: [:year_released]
+
       define :atomic_test, action: :atomic_test
     end
 
