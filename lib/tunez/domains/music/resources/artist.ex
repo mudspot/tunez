@@ -60,13 +60,13 @@ defmodule Tunez.Domains.Music.Resources.Artist do
 
       filter expr(contains(name, ^arg(:query)))
     end
-    
+
     read :with_special_albums do
       argument :year_released, :integer
-      
+
       filter expr(
-               id in fragment(
-                 "SELECT artist_id FROM albums WHERE year_released = ?",
+               fragment(
+                 "id = ANY(SELECT artist_id FROM albums WHERE year_released = ?)",
                  ^arg(:year_released)
                )
              )
