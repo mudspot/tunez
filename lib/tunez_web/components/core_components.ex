@@ -1,4 +1,4 @@
-defmodule TunezWeb.CoreComponents do
+defmodule TunezWeb.Components.CoreComponents do
   @moduledoc """
   Provides core UI components.
 

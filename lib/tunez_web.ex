@@ -40,7 +40,7 @@ defmodule TunezWeb do
     quote do
       use Phoenix.Controller,
         formats: [:html, :json],
-        layouts: [html: TunezWeb.Layouts]
+        layouts: [html: TunezWeb.Components.Layouts]
 
       use Gettext, backend: TunezWeb.Gettext
 
@@ -53,7 +53,7 @@ defmodule TunezWeb do
   def live_view do
     quote do
       use Phoenix.LiveView,
-        layout: {TunezWeb.Layouts, :app}
+        layout: {TunezWeb.Components.Layouts, :app}
 
       unquote(html_helpers())
     end
@@ -88,7 +88,7 @@ defmodule TunezWeb do
       # HTML escaping functionality
       import Phoenix.HTML
       # Core UI components
-      import TunezWeb.CoreComponents
+      import TunezWeb.Components.CoreComponents
 
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS

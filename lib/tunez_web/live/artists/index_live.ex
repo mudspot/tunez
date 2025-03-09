@@ -1,4 +1,4 @@
-defmodule TunezWeb.Artists.IndexLive do
+defmodule TunezWeb.Live.Artists.IndexLive do
   use TunezWeb, :live_view
 
   require Logger

@@ -1,4 +1,4 @@
-defmodule TunezWeb.Albums.FormLive do
+defmodule TunezWeb.Live.Albums.FormLive do
   use TunezWeb, :live_view
 
   alias Tunez.Domains.Music, as: MusicDomain
