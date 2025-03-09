@@ -59,6 +59,8 @@ defmodule Tunez.Domains.Music.Resources.Artist do
       end
 
       filter expr(contains(name, ^arg(:query)))
+
+      pagination offset?: true, default_limit: 12
     end
 
     read :with_special_albums do
@@ -78,6 +80,7 @@ defmodule Tunez.Domains.Music.Resources.Artist do
 
     attribute :name, :string do
       allow_nil? false
+      public? true
     end
 
     attribute :biography, :string
@@ -86,15 +89,20 @@ defmodule Tunez.Domains.Music.Resources.Artist do
 
     attribute :previous_names, {:array, :string}, do: default([])
 
-    create_timestamp :created_at
+    create_timestamp :created_at do
+      public? true
+    end
 
     update_timestamp :updated_at do
       allow_nil? true
       default nil
+      public? true
     end
   end
 
   relationships do
-    has_many :albums, Tunez.Domains.Music.Resources.Album
+    has_many :albums, Tunez.Domains.Music.Resources.Album do
+      sort year_released: :desc
+    end
   end
 end

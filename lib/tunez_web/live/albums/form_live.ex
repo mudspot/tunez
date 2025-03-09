@@ -94,7 +94,6 @@ defmodule TunezWeb.Albums.FormLive do
                 phx-value-path={track_form.name}
                 kind="error"
                 size="xs"
-                text
                 class="mt-0.5"
               >
                 <.icon name="hero-trash" class="w-5 h-5" />
@@ -105,7 +104,7 @@ defmodule TunezWeb.Albums.FormLive do
       </tbody>
     </table>
 
-    <.button_link phx-click="add-track" kind="primary" size="sm" outline>
+    <.button_link phx-click="add-track" kind="primary" size="sm" inverse>
       Add Track
     </.button_link>
     """

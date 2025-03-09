@@ -15,79 +15,10 @@ defmodule TunezWeb.CoreComponents do
   Icons are provided by [heroicons](https://heroicons.com). See `icon/1` for usage.
   """
   use Phoenix.Component
-  use Gettext, backend: TunezWeb.Gettext
+  use TunezWeb, :verified_routes
 
   alias Phoenix.LiveView.JS
-
-  @doc """
-  Renders a modal.
-
-  ## Examples
-
-      <.modal id="confirm-modal">
-        This is a modal.
-      </.modal>
-
-  JS commands may be passed to the `:on_cancel` to configure
-  the closing/cancel event, for example:
-
-      <.modal id="confirm" on_cancel={JS.navigate(~p"/posts")}>
-        This is another modal.
-      </.modal>
-
-  """
-  attr :id, :string, required: true
-  attr :show, :boolean, default: false
-  attr :on_cancel, JS, default: %JS{}
-  slot :inner_block, required: true
-
-  def modal(assigns) do
-    ~H"""
-    <div
-      id={@id}
-      phx-mounted={@show && show_modal(@id)}
-      phx-remove={hide_modal(@id)}
-      data-cancel={JS.exec(@on_cancel, "phx-remove")}
-      class="relative z-50 hidden"
-    >
-      <div id={"#{@id}-bg"} class="bg-zinc-50/90 fixed inset-0 transition-opacity" aria-hidden="true" />
-      <div
-        class="fixed inset-0 overflow-y-auto"
-        aria-labelledby={"#{@id}-title"}
-        aria-describedby={"#{@id}-description"}
-        role="dialog"
-        aria-modal="true"
-        tabindex="0"
-      >
-        <div class="flex min-h-full items-center justify-center">
-          <div class="w-full max-w-3xl p-4 sm:p-6 lg:py-8">
-            <.focus_wrap
-              id={"#{@id}-container"}
-              phx-window-keydown={JS.exec("data-cancel", to: "##{@id}")}
-              phx-key="escape"
-              phx-click-away={JS.exec("data-cancel", to: "##{@id}")}
-              class="shadow-zinc-700/10 ring-zinc-700/10 relative hidden rounded-2xl bg-white p-14 shadow-lg ring-1 transition"
-            >
-              <div class="absolute top-6 right-5">
-                <button
-                  phx-click={JS.exec("data-cancel", to: "##{@id}")}
-                  type="button"
-                  class="-m-3 flex-none p-3 opacity-20 hover:opacity-40"
-                  aria-label={gettext("close")}
-                >
-                  <.icon name="hero-x-mark-solid" class="h-5 w-5" />
-                </button>
-              </div>
-              <div id={"#{@id}-content"}>
-                {render_slot(@inner_block)}
-              </div>
-            </.focus_wrap>
-          </div>
-        </div>
-      </div>
-    </div>
-    """
-  end
+  use Gettext, backend: TunezWeb.Gettext
 
   @doc """
   Renders flash notices.
@@ -100,7 +31,11 @@ defmodule TunezWeb.CoreComponents do
   attr :id, :string, doc: "the optional id of flash container"
   attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
   attr :title, :string, default: nil
-  attr :kind, :atom, values: [:info, :error], doc: "used for styling and flash lookup"
+
+  attr :kind, :atom,
+    values: [:warning, :info, :error],
+    doc: "used for styling and flash lookup"
+
   attr :rest, :global, doc: "the arbitrary HTML attributes to add to the flash container"
 
   slot :inner_block, doc: "the optional inner block that renders the flash message"
@@ -115,21 +50,34 @@ defmodule TunezWeb.CoreComponents do
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       role="alert"
       class={[
-        "fixed top-2 right-2 mr-2 w-80 sm:w-96 z-50 rounded-lg p-3 ring-1",
-        @kind == :info && "bg-emerald-50 text-emerald-800 ring-emerald-500 fill-cyan-900",
-        @kind == :error && "bg-rose-50 text-rose-900 shadow-md ring-rose-500 fill-rose-900"
+        "relative",
+        "w-80 sm:w-96 shadow-lg mb-2 border-0 border-l-4 bg-white cursor-pointer rounded-lg p-4",
+        @kind == :info && "border-green-600",
+        @kind == :error && "border-error-600",
+        @kind == :warning && "border-yellow-500"
       ]}
       {@rest}
     >
-      <p :if={@title} class="flex items-center gap-1.5 text-sm font-semibold leading-6">
-        <.icon :if={@kind == :info} name="hero-information-circle-mini" class="h-4 w-4" />
-        <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="h-4 w-4" />
-        {@title}
-      </p>
-      <p class="mt-2 text-sm leading-5">{msg}</p>
-      <button type="button" class="group absolute top-1 right-1 p-2" aria-label={gettext("close")}>
-        <.icon name="hero-x-mark-solid" class="h-5 w-5 opacity-40 group-hover:opacity-70" />
-      </button>
+      <div class="grid grid-flow-cols grid-cols-[auto_minmax(auto,1fr)] justify-items-start text-start gap-2 items-center">
+        <.icon
+          :if={@kind == :error}
+          name="hero-exclamation-circle-mini"
+          class="w-6 h-6 text-error-600"
+        />
+        <.icon :if={@kind == :info} name="hero-check-circle-mini" class="w-6 h-6 text-green-600" />
+        <.icon
+          :if={@kind == :warning}
+          name="hero-exclamation-circle-mini"
+          class="w-6 h-6 text-yellow-500"
+        />
+        <div>
+          <p :if={@title} class="font-semibold text-sm">{@title}</p>
+          <p class="text-sm">{msg}</p>
+        </div>
+        <button type="button" class="group absolute top-1 right-1 p-2" aria-label={gettext("close")}>
+          <.icon name="hero-x-mark-solid" class="h-5 w-5 opacity-40 group-hover:opacity-70" />
+        </button>
+      </div>
     </div>
     """
   end
@@ -146,9 +94,10 @@ defmodule TunezWeb.CoreComponents do
 
   def flash_group(assigns) do
     ~H"""
-    <div id={@id}>
-      <.flash kind={:info} title={gettext("Success!")} flash={@flash} />
-      <.flash kind={:error} title={gettext("Error!")} flash={@flash} />
+    <div id={@id} class="fixed top-4 right-4 space-y-2 z-50">
+      <.flash kind={:info} flash={@flash} />
+      <.flash kind={:error} flash={@flash} />
+      <.flash kind={:warning} flash={@flash} />
       <.flash
         id="client-error"
         kind={:error}
@@ -203,43 +152,33 @@ defmodule TunezWeb.CoreComponents do
     <%= if @image do %>
       <img src={@image} class="block aspect-square rounded-md w-full" />
     <% else %>
-      <div class="border border-base-content/25 place-content-center grid rounded-md aspect-square">
-        <.icon name="hero-photo" class="bg-base-content/25 w-8 h-8" />
+      <div class="border border-gray-300 place-content-center grid rounded-md aspect-square">
+        <.icon name="hero-photo" class="bg-gray-300 w-8 h-8" />
       </div>
     <% end %>
     """
   end
 
   attr :kind, :string,
-    values: ~w(base neutral primary secondary accent ghost error),
+    values: ~w(base primary error),
     default: "base"
 
-  attr :outline, :boolean, default: false
-  attr :text, :boolean, default: false
-  attr :size, :string, values: ~w(lg sm xs md), default: "md"
+  attr :inverse, :boolean, default: false
+  attr :size, :string, values: ~w(sm xs md), default: "md"
   attr :class, :string, default: ""
   attr :rest, :global, include: ~w(navigate disabled patch)
 
   slot :inner_block
 
   def button_link(assigns) do
+    assigns =
+      assign(assigns, :theme, button_styles(assigns.kind, assigns.inverse, assigns.size))
+
     ~H"""
     <.link
       class={[
-        "btn",
-        @size == "lg" && "btn-lg",
-        @size == "sm" && "btn-sm",
-        @size == "xs" && "btn-xs",
-        @kind == "primary" && "btn-primary",
-        @kind == "secondary" && "btn-secondary",
-        @kind == "neutral" && "btn-neutral",
-        @kind == "accent" && "btn-accent",
-        @kind == "ghost" && "btn-ghost",
-        @kind == "error" && "btn-ghost text-error",
-        @kind == "error" && !(@outline || @text) && "bg-red-100 hover:bg-red-200",
-        @outline && "btn-outline",
-        @text && "btn-link",
-        @rest[:disabled] && "!bg-base-200",
+        @theme,
+        @rest[:disabled] && "opacity-60 grayscale pointer-events-none",
         @class
       ]}
       {@rest}
@@ -247,6 +186,40 @@ defmodule TunezWeb.CoreComponents do
       {render_slot(@inner_block)}
     </.link>
     """
+  end
+
+  def button_styles(kind, inverse, size) do
+    theme =
+      case {kind, inverse} do
+        {"base", false} ->
+          "bg-gray-100"
+
+        {"base", true} ->
+          "border border-gray-500 text-gray-600"
+
+        {"primary", false} ->
+          "bg-primary-600 hover:bg-primary-700 text-white"
+
+        {"primary", true} ->
+          "border border-primary-700 text-primary-700 hover:bg-primary-50 font-semibold"
+
+        {"error", false} ->
+          "bg-error-700 hover:bg-error-800 text-white"
+
+        {"error", true} ->
+          "text-error-600 underline"
+
+        _ ->
+          ""
+      end
+
+    [
+      "phx-submit-loading:opacity-75 rounded-lg font-medium leading-none inline-block",
+      size == "md" && "py-3 px-5 text-sm",
+      size == "sm" && "py-2 px-3 text-sm",
+      size == "xs" && "py-2 px-2 text-xs",
+      theme
+    ]
   end
 
   @doc """
@@ -275,7 +248,7 @@ defmodule TunezWeb.CoreComponents do
   def simple_form(assigns) do
     ~H"""
     <.form :let={f} for={@for} as={@as} {@rest}>
-      <div class="mt-10 space-y-8 bg-white">
+      <div class="space-y-8">
         {render_slot(@inner_block, f)}
         <div :for={action <- @actions} class="mt-2 flex items-center justify-between gap-6">
           {render_slot(action, f)}
@@ -303,11 +276,16 @@ defmodule TunezWeb.CoreComponents do
     ~H"""
     <button
       type={@type}
-      class={[
-        "phx-submit-loading:opacity-75 rounded-lg bg-zinc-900 hover:bg-zinc-700 py-2 px-3",
-        "text-sm font-semibold leading-6 text-white active:text-white/80",
-        @class
-      ]}
+      class={
+        [
+          "phx-submit-loading:opacity-75 rounded-lg font-medium leading-none",
+          # medium
+          "py-3 px-4 text-sm",
+          # primary
+          "bg-primary-600 hover:bg-primary-700 text-white",
+          @class
+        ]
+      }
       {@rest}
     >
       {render_slot(@inner_block)}
@@ -345,6 +323,8 @@ defmodule TunezWeb.CoreComponents do
   attr :name, :any
   attr :label, :string, default: nil
   attr :value, :any
+  attr :class, :string, default: "", doc: "Any extra classes to be applied"
+  attr :container_class, :string, default: "", doc: "Classes to be applied to the parent div"
 
   attr :type, :string,
     default: "text",
@@ -382,7 +362,7 @@ defmodule TunezWeb.CoreComponents do
       end)
 
     ~H"""
-    <div>
+    <.form_control class={@container_class} errors={@errors}>
       <label class="flex items-center gap-4 text-sm leading-6 text-zinc-600">
         <input type="hidden" name={@name} value="false" disabled={@rest[:disabled]} />
         <input
@@ -391,72 +371,75 @@ defmodule TunezWeb.CoreComponents do
           name={@name}
           value="true"
           checked={@checked}
-          class="rounded border-zinc-300 text-zinc-900 focus:ring-0"
+          class={[form_input_styles(), @class]}
           {@rest}
         />
         {@label}
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
-    </div>
+    </.form_control>
     """
   end
 
   def input(%{type: "select"} = assigns) do
     ~H"""
-    <div>
+    <.form_control class={@container_class} errors={@errors}>
       <.label for={@id}>{@label}</.label>
-      <select
-        id={@id}
-        name={@name}
-        class="mt-2 block w-full rounded-md border border-gray-300 bg-white shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm"
-        multiple={@multiple}
-        {@rest}
-      >
+      <select id={@id} name={@name} class={[form_input_styles(), @class]} multiple={@multiple} {@rest}>
         <option :if={@prompt} value="">{@prompt}</option>
         {Phoenix.HTML.Form.options_for_select(@options, @value)}
       </select>
       <.error :for={msg <- @errors}>{msg}</.error>
-    </div>
+    </.form_control>
     """
   end
 
   def input(%{type: "textarea"} = assigns) do
     ~H"""
-    <div>
+    <.form_control class={@container_class} errors={@errors}>
       <.label for={@id}>{@label}</.label>
-      <textarea
-        id={@id}
-        name={@name}
-        class={[
-          "mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6 min-h-[6rem]",
-          @errors == [] && "border-zinc-300 focus:border-zinc-400",
-          @errors != [] && "border-rose-400 focus:border-rose-400"
-        ]}
-        {@rest}
-      >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
+      <textarea id={@id} name={@name} class={[form_input_styles(), @class, "min-h-[6rem]"]} {@rest}><%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
       <.error :for={msg <- @errors}>{msg}</.error>
-    </div>
+    </.form_control>
     """
   end
 
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
-    <div>
+    <.form_control class={@container_class} errors={@errors}>
       <.label for={@id}>{@label}</.label>
       <input
         type={@type}
         name={@name}
         id={@id}
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-        class={[
-          "mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6",
-          @errors == [] && "border-zinc-300 focus:border-zinc-400",
-          @errors != [] && "border-rose-400 focus:border-rose-400"
-        ]}
+        class={[form_input_styles(), @class]}
+        phx-debounce="250"
         {@rest}
       />
       <.error :for={msg <- @errors}>{msg}</.error>
+    </.form_control>
+    """
+  end
+
+  def form_input_styles do
+    [
+      "my-2 block w-full rounded-lg text-zinc-900 focus:ring focus:outline-none sm:leading-6",
+      "border-zinc-300 focus:border-zinc-400 focus:ring-zinc-100",
+      "error:border-error-400 error:focus:border-error-600 error:focus:ring-error-100",
+      "disabled:bg-gray-100 disabled:text-zinc-400"
+    ]
+  end
+
+  attr :errors, :list, default: []
+  attr :class, :string, default: ""
+  slot :inner_block
+
+  def form_control(assigns) do
+    ~H"""
+    <div class={[@class, @errors != [] && "error"]}>
+      {render_slot(@inner_block)}
     </div>
     """
   end
@@ -469,7 +452,7 @@ defmodule TunezWeb.CoreComponents do
 
   def label(assigns) do
     ~H"""
-    <label for={@for} class="block text-sm font-semibold leading-6 text-zinc-800">
+    <label for={@for} class="text-sm font-medium leading-6 text-zinc-800 error:text-error-600">
       {render_slot(@inner_block)}
     </label>
     """
@@ -482,7 +465,7 @@ defmodule TunezWeb.CoreComponents do
 
   def error(assigns) do
     ~H"""
-    <p class="mt-3 flex gap-3 text-sm leading-6 text-rose-600">
+    <p class="mt-1.5 flex gap-1.5 text-sm leading-6 text-error-600 items-center">
       <.icon name="hero-exclamation-circle-mini" class="mt-0.5 h-5 w-5 flex-none" />
       {render_slot(@inner_block)}
     </p>
@@ -503,6 +486,8 @@ defmodule TunezWeb.CoreComponents do
   slot :action
 
   def header(assigns) do
+    assigns = assign_new(assigns, :dropdown_id, fn -> "dropdown_#{Ecto.UUID.generate()}" end)
+
     ~H"""
     <header class={[
       @action != [] && "flex items-center justify-between sm:gap-3 md:gap-6",
@@ -518,160 +503,38 @@ defmodule TunezWeb.CoreComponents do
       <div
         :if={@action != []}
         class={[
-          !@responsive && "flex-none space-x-4",
-          @responsive && "max-sm:dropdown max-sm:dropdown-end sm:flex-none sm:space-x-4"
+          !@responsive && "flex-none",
+          @responsive && "max-sm:relative sm:flex-none sm:space-x-4"
         ]}
       >
         <div
           :if={@responsive}
           tabindex="0"
           role="button"
-          class="btn btn-sm btn-primary btn-outline sm:hidden"
+          class={[button_styles("primary", true, "xs"), "sm:hidden"]}
+          phx-click={toggle("##{@dropdown_id}")}
+          phx-click-away={hide("##{@dropdown_id}")}
         >
           <.icon name="hero-chevron-double-down w-4 h-4" />
         </div>
         <div
+          id={@dropdown_id}
           tabindex="0"
           class={[
-            !@responsive && "space-x-4",
             @responsive &&
-              "dropdown-content max-sm:flex max-sm:flex-col-reverse max-sm:z-[1] max-sm:menu
-               max-sm:p-2 max-sm:shadow max-sm:bg-base-100 max-sm:rounded-box max-sm:w-52 sm:space-x-4"
+              "max-sm:hidden max-sm:absolute max-sm:right-0 max-sm:bg-white max-sm:shadow max-sm:rounded sm:!block"
           ]}
         >
-          {render_slot(@action)}
+          <div class={[
+            !@responsive && "space-x-4",
+            @responsive &&
+              "max-sm:flex max-sm:flex-col-reverse max-sm:p-2 max-sm:w-48 sm:space-x-4"
+          ]}>
+            {render_slot(@action)}
+          </div>
         </div>
       </div>
     </header>
-    """
-  end
-
-  @doc ~S"""
-  Renders a table with generic styling.
-
-  ## Examples
-
-      <.table id="users" rows={@users}>
-        <:col :let={user} label="id">{user.id}</:col>
-        <:col :let={user} label="username">{user.username}</:col>
-      </.table>
-  """
-  attr :id, :string, required: true
-  attr :rows, :list, required: true
-  attr :row_id, :any, default: nil, doc: "the function for generating the row id"
-  attr :row_click, :any, default: nil, doc: "the function for handling phx-click on each row"
-
-  attr :row_item, :any,
-    default: &Function.identity/1,
-    doc: "the function for mapping each row before calling the :col and :action slots"
-
-  slot :col, required: true do
-    attr :label, :string
-  end
-
-  slot :action, doc: "the slot for showing user actions in the last table column"
-
-  def table(assigns) do
-    assigns =
-      with %{rows: %Phoenix.LiveView.LiveStream{}} <- assigns do
-        assign(assigns, row_id: assigns.row_id || fn {id, _item} -> id end)
-      end
-
-    ~H"""
-    <div class="overflow-y-auto px-4 sm:overflow-visible sm:px-0">
-      <table class="w-[40rem] mt-11 sm:w-full">
-        <thead class="text-sm text-left leading-6 text-zinc-500">
-          <tr>
-            <th :for={col <- @col} class="p-0 pb-4 pr-6 font-normal">{col[:label]}</th>
-            <th :if={@action != []} class="relative p-0 pb-4">
-              <span class="sr-only">{gettext("Actions")}</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody
-          id={@id}
-          phx-update={match?(%Phoenix.LiveView.LiveStream{}, @rows) && "stream"}
-          class="relative divide-y divide-zinc-100 border-t border-zinc-200 text-sm leading-6 text-zinc-700"
-        >
-          <tr :for={row <- @rows} id={@row_id && @row_id.(row)} class="group hover:bg-zinc-50">
-            <td
-              :for={{col, i} <- Enum.with_index(@col)}
-              phx-click={@row_click && @row_click.(row)}
-              class={["relative p-0", @row_click && "hover:cursor-pointer"]}
-            >
-              <div class="block py-4 pr-6">
-                <span class="absolute -inset-y-px right-0 -left-4 group-hover:bg-zinc-50 sm:rounded-l-xl" />
-                <span class={["relative", i == 0 && "font-semibold text-zinc-900"]}>
-                  {render_slot(col, @row_item.(row))}
-                </span>
-              </div>
-            </td>
-            <td :if={@action != []} class="relative w-14 p-0">
-              <div class="relative whitespace-nowrap py-4 text-right text-sm font-medium">
-                <span class="absolute -inset-y-px -right-4 left-0 group-hover:bg-zinc-50 sm:rounded-r-xl" />
-                <span
-                  :for={action <- @action}
-                  class="relative ml-4 font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
-                >
-                  {render_slot(action, @row_item.(row))}
-                </span>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    """
-  end
-
-  @doc """
-  Renders a data list.
-
-  ## Examples
-
-      <.list>
-        <:item title="Title">{@post.title}</:item>
-        <:item title="Views">{@post.views}</:item>
-      </.list>
-  """
-  slot :item, required: true do
-    attr :title, :string, required: true
-  end
-
-  def list(assigns) do
-    ~H"""
-    <div class="mt-14">
-      <dl class="-my-4 divide-y divide-zinc-100">
-        <div :for={item <- @item} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
-          <dt class="w-1/4 flex-none text-zinc-500">{item.title}</dt>
-          <dd class="text-zinc-700">{render_slot(item)}</dd>
-        </div>
-      </dl>
-    </div>
-    """
-  end
-
-  @doc """
-  Renders a back navigation link.
-
-  ## Examples
-
-      <.back navigate={~p"/posts"}>Back to posts</.back>
-  """
-  attr :navigate, :any, required: true
-  slot :inner_block, required: true
-
-  def back(assigns) do
-    ~H"""
-    <div class="mt-16">
-      <.link
-        navigate={@navigate}
-        class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
-      >
-        <.icon name="hero-arrow-left-solid" class="h-3 w-3" />
-        {render_slot(@inner_block)}
-      </.link>
-    </div>
     """
   end
 
@@ -709,13 +572,10 @@ defmodule TunezWeb.CoreComponents do
     assigns = assign(assigns, :seed, avatar_seed(assigns.user))
 
     ~H"""
-    <div
-      class={["mask mask-circle size-8", @class]}
-      phx-hook="avatar"
-      id={"avatar_#{@seed}"}
-      data-seed={@seed}
-    >
-    </div>
+    <img
+      class={["rounded-full size-8", @class]}
+      src={"https://api.dicebear.com/9.x/shapes/svg?seed=#{@seed}"}
+    />
     """
   end
 
@@ -765,6 +625,21 @@ defmodule TunezWeb.CoreComponents do
   end
 
   ## JS Commands
+
+  def toggle(js \\ %JS{}, selector) do
+    JS.toggle(js,
+      to: selector,
+      time: 300,
+      in:
+        {"transition-all transform ease-out duration-300",
+         "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95",
+         "opacity-100 translate-y-0 sm:scale-100"},
+      out:
+        {"transition-all transform ease-in duration-200",
+         "opacity-100 translate-y-0 sm:scale-100",
+         "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"}
+    )
+  end
 
   def show(js \\ %JS{}, selector) do
     JS.show(js,

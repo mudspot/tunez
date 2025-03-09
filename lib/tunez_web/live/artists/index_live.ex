@@ -15,12 +15,17 @@ defmodule TunezWeb.Artists.IndexLive do
 
   def handle_params(params, _url, socket) do
     query_text = Map.get(params, "q", "")
-    {:ok, artists} = query_text |> Music.search_artists()
+    sort_by = Map.get(params, "sort_by") |> validate_sort_by()
+    page_params = AshPhoenix.LiveView.page_from_params(params, 12)
+
+    {:ok, page} =
+      query_text |> Music.search_artists(page: page_params, query: [sort_input: sort_by])
 
     socket =
       socket
+      |> assign(:sort_by, sort_by)
       |> assign(:query_text, query_text)
-      |> assign(:artists, artists)
+      |> assign(:page, page)
 
     {:noreply, socket}
   end
@@ -57,11 +62,26 @@ defmodule TunezWeb.Artists.IndexLive do
 
   def pagination_links(assigns) do
     ~H"""
-    <div class="flex justify-center pt-8 join">
-      <.button_link data-role="previous-page" class="join-item" kind="primary" outline>
+    <div
+      :if={AshPhoenix.LiveView.prev_page?(@page) || AshPhoenix.LiveView.next_page?(@page)}
+      class="flex justify-center pt-8 space-x-4"
+    >
+      <.button_link
+        data-role="previous-page"
+        kind="primary"
+        inverse
+        patch={~p"/?#{query_string(@page, @query_text, @sort_by, "prev")}"}
+        disabled={!AshPhoenix.LiveView.prev_page?(@page)}
+      >
         « Previous
       </.button_link>
-      <.button_link data-role="next-page" class="join-item" kind="primary" outline>
+      <.button_link
+        data-role="next-page"
+        kind="primary"
+        inverse
+        patch={~p"/?#{query_string(@page, @query_text, @sort_by, "next")}"}
+        disabled={!AshPhoenix.LiveView.next_page?(@page)}
+      >
         Next »
       </.button_link>
     </div>
@@ -90,31 +110,31 @@ defmodule TunezWeb.Artists.IndexLive do
     assigns = assign(assigns, :options, sort_options())
 
     ~H"""
-    <form data-role="artist-sort" class="hidden sm:inline" phx-change="change_sort">
-      <label for="sort_by" class="text-sm">sort by:</label>
-      <select class="select select-bordered select-sm py-0 w-fit" name="sort_by">
-        <option
-          :for={{value, text} <- @options}
-          value={value}
-          {if @selected == value, do: [selected: true], else: []}
-        >
-          {text}
-        </option>
-      </select>
+    <form data-role="artist-sort" class="hidden sm:inline" phx-change="change-sort">
+      <.input
+        label="sort by:"
+        type="select"
+        id="sort_by"
+        name="sort_by"
+        options={@options}
+        value={@selected}
+        class="px-2 py-0.5 !w-fit !inline-block pr-8 text-sm"
+        container_class="!inline-block"
+      />
     </form>
     """
   end
 
   defp sort_options do
     [
-      {"updated_at", "recently updated"},
-      {"inserted_at", "recently added"},
+      {"recently updated", "-updated_at"},
+      {"recently added", "-created_at"},
       {"name", "name"}
     ]
   end
 
   def validate_sort_by(key) do
-    valid_keys = Enum.map(sort_options(), &elem(&1, 0))
+    valid_keys = Enum.map(sort_options(), &elem(&1, 1))
 
     if key in valid_keys do
       key
@@ -127,7 +147,7 @@ defmodule TunezWeb.Artists.IndexLive do
     Enum.filter(params, fn {_key, val} -> val != "" end)
   end
 
-  def handle_event("change_sort", %{"sort_by" => sort_by}, socket) do
+  def handle_event("change-sort", %{"sort_by" => sort_by}, socket) do
     params = remove_empty(%{q: socket.assigns.query_text, sort_by: sort_by})
     {:noreply, push_patch(socket, to: ~p"/?#{params}")}
   end
@@ -135,5 +155,15 @@ defmodule TunezWeb.Artists.IndexLive do
   def handle_event("search", %{"query" => query}, socket) do
     params = remove_empty(%{q: query})
     {:noreply, push_patch(socket, to: ~p"/?#{params}")}
+  end
+
+  def query_string(page, query_text, sort_by, which) do
+    case AshPhoenix.LiveView.page_link_params(page, which) do
+      :invalid -> []
+      list -> list
+    end
+    |> Keyword.put(:q, query_text)
+    |> Keyword.put(:sort_by, sort_by)
+    |> remove_empty()
   end
 end

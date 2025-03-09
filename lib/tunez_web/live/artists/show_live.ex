@@ -34,7 +34,6 @@ defmodule TunezWeb.Artists.ShowLive do
           <:action>
             <.button_link
               size="sm"
-              text
               kind="error"
               data-confirm={"Are you sure you want to delete #{@album.name}?"}
               phx-click="destroy_album"
@@ -44,7 +43,7 @@ defmodule TunezWeb.Artists.ShowLive do
             </.button_link>
           </:action>
           <:action>
-            <.button_link size="sm" kind="primary" outline navigate={~p"/albums/#{@album.id}/edit"}>
+            <.button_link size="sm" kind="primary" inverse navigate={~p"/albums/#{@album.id}/edit"}>
               Edit
             </.button_link>
           </:action>

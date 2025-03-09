@@ -25,10 +25,6 @@ defmodule Tunez.Domains.Music.Resources.Album do
     end
   end
 
-  preparations do
-    prepare build(sort: [year_released: :desc])
-  end
-
   validations do
     validate numericality(:year_released,
                greater_than: 1950,

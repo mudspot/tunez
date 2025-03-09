@@ -1,7 +1,7 @@
 defmodule Tunez.Security.Vault do
   def encrypt!(data), do: encrypt(data, true)
   def decrypt!(data), do: decrypt(data, true)
-  
+
   @doc """
   Encrypts the given plaintext.
 
